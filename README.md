@@ -1,3 +1,12 @@
+# Share data in Blazor applications
+Blazor includes several ways to share information between components. You can use component parameters or cascading parameters to send values from a parent component to a child component. The AppState pattern is another approach you can use to store values and access them from any component in the application.
+
+## three techniscs to share data between components
+# Sharing information with other components by using component parameters
+In a Blazor web app, each component renders a portion of HTML. Some components render a complete page but others render smaller fragments of markup, such as a table, a form, or a single control. If your component renders only a section of markup, you must use it as a child component within a parent component. Your child component can also be a parent to other smaller components that render within it. Child components are also known as nested components.
+
+In this hierarchy of parent and child components, you can share information between them by using component parameters.
+ Define these parameters on child components, and then set their values in the parent. For example, if you have a child component that displays pizza photos, you could use a component parameter to pass the pizza ID. The child component looks up the pizza from the ID and obtains pictures and other data. If you want to display many different pizzas, you can use this child component multiple times on the same parent page, passing a different ID to each child.
 
 # Contributing
 
