@@ -73,8 +73,10 @@
     {
         isSubmitting = true;
         var response = await HttpClient.PostAsJsonAsync($"{NavigationManager.BaseUri}orders", OrderState.Order);
+        // capture the new order ID from the response
         var newOrderId = await response.Content.ReadFromJsonAsync<int>();
         OrderState.ResetOrder();
-        NavigationManager.NavigateTo("/myorders"); // navigate to the My Orders page
+        //NavigationManager.NavigateTo("/myorders"); // navigate to the My Orders page
+        NavigationManager.NavigateTo($"myorders/{newOrderId}");
     }
 }
