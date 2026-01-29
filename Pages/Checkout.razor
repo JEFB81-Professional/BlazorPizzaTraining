@@ -4,16 +4,36 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
+@* <div class="top-bar">
+    <a class="logo" href="">
+        <img src="img/logo.svg" />
+    </a>
+
+    <a href="" class="nav-tab active" >
+        <img src="img/pizza-slice.svg" />
+        <div>Get Pizza</div>
+    </a>
+
+    <a href="myorders" class="nav-tab" >
+        <img src="img/bike.svg" />
+        <div>My orders</div>
+    </a>    
+</div> *@
+
 <div class="top-bar">
     <a class="logo" href="">
         <img src="img/logo.svg" />
     </a>
 
-    <a href="" class="nav-tab">
+    <NavLink href="" class="nav-tab" Match="NavLinkMatch.All">
         <img src="img/pizza-slice.svg" />
         <div>Get Pizza</div>
-    </a>
+    </NavLink>
 
+    <NavLink href="myorders" class="nav-tab">
+        <img src="img/bike.svg" />
+        <div>My Orders</div>
+    </NavLink>
 </div>
 
 <div class="main">
@@ -52,10 +72,9 @@
     async Task PlaceOrder()
     {
         isSubmitting = true;
-        var response = await HttpClient.PostAsJsonAsync(NavigationManager.BaseUri + "orders", OrderState.Order);
+        var response = await HttpClient.PostAsJsonAsync($"{NavigationManager.BaseUri}orders", OrderState.Order);
         var newOrderId = await response.Content.ReadFromJsonAsync<int>();
-        // clear the current order and navigate back to the home page
         OrderState.ResetOrder();
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo("/myorders"); // navigate to the My Orders page
     }
 }

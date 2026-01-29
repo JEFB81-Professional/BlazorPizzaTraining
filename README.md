@@ -1,3 +1,76 @@
+# Set a catch-all route parameter
+Now suppose the user tries to specify two favorites by requesting the URI http://www.contoso.com/favoritepizza/margherita/hawaiian.
+The page displays the message Your favorite pizza is: margherita and ignores the subfolder hawaiian. 
+You can change this behavior by using a catch-all route parameter, which captures paths across multiple URI folder boundaries (forward slashes). 
+Prefix an asterisk (*) to the route parameter name to make the route parameter catch-all:
+```csharp
+@page "/FavoritePizza/{*favorites}"
+...
+```
+
+# Route constraints
+ the consequence of requesting the URI http://www.contoso.com/favoritepizza/2 is the nonsensical message "Your favorite pizza is: 2". 
+ In other cases, type mismatches like that one might cause an exception and display an error to the user.
+- Consider specifying a type for the route parameter:
+```csharp
+@page "/FavoritePizza/{preferredsize:int}"
+
+<h1>Choose a Pizza</h1>
+
+<p>Your favorite pizza size is: @FavoriteSize inches.</p>
+
+@code {
+    [Parameter]
+    public int FavoriteSize { get; set; }
+}
+```
+## other types in a constraint:
+| Constraint	|Example	| Example matches|
+|bool|	{vegan:bool}|	http://www.contoso.com/pizzas/true|
+|datetime|	{birthdate:datetime}|	http://www.contoso.com/customers/1995-12-12|
+|decimal|	{maxprice:decimal}|	http://www.contoso.com/pizzas/15.00|
+|double|	{weight:double}|	http://www.contoso.com/pizzas/1.234|
+|float|	{weight:float}|	http://www.contoso.com/pizzas/1.564|
+|guid|	{pizza id:guid}|	http://www.contoso.com/pizzas/CD2C1638-1638-72D5-1638-DEADBEEF1638|
+|long|	{totals ales:long}|	http://www.contoso.com/pizzas/568192454|
+# Optional route parameters
+the {favorite} parameter is required. To make the route parameter optional, use a question mark:
+- It's a good idea to set a default value for the optional parameter. 
+```csharp
+... 
+@code {
+    [Parameter]
+    public string Favorite { get; set; }
+    
+    protected override void OnInitialized()
+    {
+        Favorite ??= "Fiorentina";
+    }
+}
+```
+- The OnInitialized method runs when users request the page for the first time. 
+# Route parameters
+You often want to use other parts of the URI as a value in your rendered page. For example, suppose the user requests:
+
+http://www.contoso.com/favoritepizza/hawaiian
+
+By using the @page directive, you saw how to route this request to, for example, the FavoritePizza.razor component. Now you want to make use of the value hawaiian in your component. To obtain this value, you can declare it as a route parameter.
+
+Use the @page directive to specify the parts of the URI that are passed to the component as route parameters. In your component's code, you can obtain the value of a route parameter in the same way as you would obtain the value of a component parameter:
+
+```csharp
+@page "/FavoritePizzas/{favorite}"
+
+<h1>Choose a Pizza</h1>
+
+<p>Your favorite pizza is: @Favorite</p>
+
+@code {
+    [Parameter]
+    public string Favorite { get; set; }
+}
+```
+- Component parameters are values sent from a parent component to a child component. In the parent, you specify the component parameter value as an attribute of the child component's tag. Route parameters are specified differently. 
 # Use NavLink components
 In Blazor, use the NavLink component to render <a> tags because it toggles an active CSS class when the link's href attribute matches the current URL.
 By styling the active class, you can make it clear to the user which navigation link is for the current page.
