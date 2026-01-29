@@ -1,3 +1,114 @@
+# Format bound values
+If you display dates to the user, you might want to use a localized data format. For example, suppose you write a page specifically for UK users, who prefer to write dates with the day first. You can use the @bind:format directive to specify a single date format string:
+```csharp
+@page "/ukbirthdaypizza"
+
+<h1>Order a pizza for your birthday!</h1>
+
+<p>
+    Enter your birth date:
+    <input @bind="birthdate" @bind:format="dd-MM-yyyy" />
+</p>
+
+@code {
+    private DateTime birthdate { get; set; } = new(2000, 1, 1);
+}
+```
+## alternative to using the @bind:format
+write C# code to format a bound value. Use the get and set accessors in the member definition, as in this example:
+-----------
+```csharp
+@page "/pizzaapproval"
+@using System.Globalization
+
+<h1>Pizza: @PizzaName</h1>
+
+<p>Approval rating: @approvalRating</p>
+
+<p>
+    <label>
+        Set a new approval rating:
+        <input @bind="ApprovalRating" />
+    </label>
+</p>
+
+@code {
+    private decimal approvalRating = 1.0;
+    private NumberStyles style = NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign;
+    private CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
+    
+    private string ApprovalRating
+    {
+        get => approvalRating.ToString("0.000", culture);
+        set
+        {
+            if (Decimal.TryParse(value, style, culture, out var number))
+            {
+                approvalRating = Math.Round(number, 3);
+            }
+        }
+    }
+}
+```
+-----------
+# Bind elements to specific events 
+The @bind directive is smart and understands the controls it uses. For example, when you bind a value to a textbox <input>, it binds the value attribute. An HTML checkbox <input> has a checked attribute instead of a value attribute. The @bind attribute automatically uses this checked attribute instead. By default, the control is bound to the DOM onchange event. For example, consider this page
+## @bind
+```csharp
+@page "/"
+
+<h1>My favorite pizza is: @favPizza</h1>
+
+<p>
+    Enter your favorite pizza:
+    <input @bind="favPizza" />
+</p>
+
+@code {
+    private string favPizza { get; set; } = "Margherita"
+}
+```
+When the page is rendered, the default value Margherita is displayed in both the <h1> element and the textbox. When you enter a new favorite pizza in the textbox, the <h1> element doesn't change until you tab out of the textbox or select Enter because that's when the onchange DOM event fires.
+
+## the @bind-value and @bind-value:event
+Often, that's the behavior you want. But suppose you want the <h1> element to update as soon as you enter any character in the textbox. 
+You can achieve this outcome by binding to the oninput DOM event instead. 
+To bind to this event, you must use the @bind-value and @bind-value:event directives:
+```csharp
+@page "/"
+
+<h1>My favorite pizza is: @favPizza</h1>
+
+<p>
+    Enter your favorite pizza:
+    <input @bind-value="favPizza" @bind-value:event="oninput" />
+</p>
+
+@code {
+    private string favPizza { get; set; } = "Margherita"
+}
+```
+- In this case, the title changes as soon as you type any character in the textbox.
+
+
+# What is data binding?
+If you want an HTML element to display a value, you can write code to alter the display. You need to write extra code to update the display when the value changes. In Blazor, you can use data binding to connect an HTML element to a field, property, or expression. This way, when the value changes, the HTML element is automatically updated. The update usually happens quickly after the change, and you don't have to write any update code.
+
+To bind a control, you would use the @bind directive:
+```csharp
+@page "/"
+
+<p>
+    Your email address is:
+    <input @bind="customerEmail" />
+</p>
+
+@code {
+    private string customerEmail = "user@contoso.com"
+}
+```
+- In the preceding page, whenever the customerEmail variable changes its value, the <input> value updates.
+
 # Share data in Blazor applications
 Blazor includes several ways to share information between components. You can use component parameters or cascading parameters to send values from a parent component to a child component. The AppState pattern is another approach you can use to store values and access them from any component in the application.
 
