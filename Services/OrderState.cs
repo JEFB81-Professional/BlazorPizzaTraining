@@ -13,7 +13,7 @@ public class OrderState
             Special = special,
             SpecialId = special.Id,
             Size = Pizza.DefaultSize,
-            Toppings = new List<PizzaTopping>(),
+            Toppings = [],
         };
 
         ShowingConfigureDialog = true;
@@ -32,5 +32,10 @@ public class OrderState
         ConfiguringPizza = null;
 
         ShowingConfigureDialog = false;
+    }
+
+    public void RemoveConfiguredPizza(Pizza pizza)
+    {
+        Order.Pizzas.Remove(pizza);
     }
 }

@@ -1,3 +1,6 @@
+# binding controls
+Blazor allows you to bind HTML controls to C# properties to update when their values change.
+- Customers should see what pizzas they're ordering and how the size they choose affects the price.
 # Format bound values
 If you display dates to the user, you might want to use a localized data format. For example, suppose you write a page specifically for UK users, who prefer to write dates with the day first. You can use the @bind:format directive to specify a single date format string:
 ```csharp
