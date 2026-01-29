@@ -1,3 +1,234 @@
+# Use an EventCallback to handle events across components
+-  to pass events between Blazor components.
+A Blazor page can contain one or more Blazor components, and components can be nested in a parent-child relationship. An event in a child component can trigger an event-handler method in a parent component by using an EventCallback. A callback references a method in the parent component. The child component can run the method by invoking the callback. This mechanism is similar to using a delegate to reference a method in a C# application.
+A callback can take a single parameter. EventCallback is a generic type. The type parameter specifies the type of the argument passed to the callback.
+
+The following code shows the TextDisplay component. It provides the input string in the form of an <input> element that enables the user to enter a text value.
+```csharp
+@* TextDisplay component *@
+@using WebApplication.Data;
+
+<p>Enter text:</p>
+<input @onkeypress="HandleKeyPress" value="@data" />
+
+@code {
+    [Parameter]
+    public EventCallback<KeyTransformation> OnKeyPressCallback { get; set; }
+
+    private string data;
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        KeyTransformation t = new KeyTransformation() { Key = e.Key };
+        await OnKeyPressCallback.InvokeAsync(t);
+        data += t.TransformedKey;
+    }
+}
+```
+- The TextDisplay component uses an EventCallback object named OnKeyPressCallback. The code in the HandleKeypress method invokes the callback. The @onkeypress event handler runs each time a key is pressed and calls the HandleKeypress method. The HandleKeypress method creates a KeyTransformation object using the key the user pressed and passes this object as the parameter to the callback. The KeyTransformation type is a simple class with two fields:
+```csharp
+namespace WebApplication.Data
+{
+    public class KeyTransformation
+    {
+        public string Key { get; set; }
+        public string TransformedKey { get; set; }
+    }
+}
+```
+# default action
+you can override the default action with the preventDefault attribute of the event, like this:
+- <input value=@data @onkeypress="ProcessKeyPress" @onkeypress:preventDefault />
+
+Some events in a child element in the DOM can trigger events in their parent elements. I
+<div> element contains an @onclick event handler. The <button> inside the <div> has its own @onclick event handler.
+
+## example
+<div @onclick="HandleDivClick">
+    <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+    <input value=@data @onkeypress="ProcessKeyPress" @onkeypress:preventDefault />
+</div>
+
+```csharp
+@code {
+    private async Task HandleDivClick()
+    {
+        await JS.InvokeVoidAsync("alert", "Div click");
+    }
+
+    private async Task ProcessKeyPress(KeyboardEventArgs e)
+    {
+        // Omitted for brevity
+    }
+
+    private int currentCount = 0;
+
+    private void IncrementCount(MouseEventArgs e)
+    {
+        // Omitted for brevity
+    }
+}
+```
+- When the app runs, if the user clicks any element (or empty space) in the area occupied by the <div> element, the method HandleDivClick runs and displays a message. 
+If the user selects the Click me button, the IncrementCount method runs, followed by HandleDivClick;
+the @onclick event propagates up the DOM tree. 
+If the <div> was part of another element that also handled the @onclick event, that event handler would also run, and so on, to the root of the DOM tree. 
+You can curtail this upwards proliferation of events with the stopPropagation attribute of an event, as shown here:
+``` html
+<div @onclick="HandleDivClick">
+    <button class="btn btn-primary" @onclick="IncrementCount" @onclick:stopPropagation>Click me</button>
+    <!-- Omitted for brevity -->
+</div>
+```
+
+# Override default DOM actions for events
+Several DOM events have default actions that run when the event occurs, regardless of whether there's an event handler available for that event. For example, the @onkeypress event for an <input> element always displays the character that corresponds to the key pressed by the user and then handles the key press. 
+For example, the @onkeypress event for an <input> element always displays the character that corresponds to the key pressed by the user and then handles the key press. In the next example, the @onkeypress event is used to convert the user's input to uppercase. Additionally, if the user types an @ character, the event handler displays an alert:
+```csharp
+<input value=@data @onkeypress="ProcessKeyPress"/>
+
+@code {
+    private string data;
+
+    private async Task ProcessKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "@")
+        {
+            await JS.InvokeVoidAsync("alert", "You pressed @");
+        }
+        else
+        {
+            data += e.Key.ToUpper();
+        }
+    }
+}
+```
+- If you run this code and press the @ key, the alert is displayed, but the @ character is also added to the input. The addition of the @ character is the default action of the eve
+
+# provide other arguments for an event-handling 
+the method HandleClick takes a MouseEventArgs parameter in the same way as an ordinary click event handler, but it also accepts a string parameter. 
+The method processes the click event as before, but also displays the message if the user presses the Ctrl key. 
+The lambda expression calls the HandleCLick method, passing in the MouseEventArgs parameter (mouseEvent), and a string.
+```csharp
+@page "/counter"
+@inject IJSRuntime JS
+
+<h1>Counter</h1>
+
+<p id="currentCount">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick='mouseEvent => HandleClick(mouseEvent, "Hello")'>Click me</button>
+
+@code {
+    private int currentCount = 0;
+
+    private async Task HandleClick(MouseEventArgs e, string msg)
+    {
+        if (e.CtrlKey) // Ctrl key pressed as well
+        {
+            await JS.InvokeVoidAsync("alert", msg);
+            currentCount += 5;
+        }
+        else
+        {
+            currentCount++;
+        }
+    }
+}
+```
+- This example uses the JavaScript alert function to display the message because there's no equivalent function in Blazor. 
+
+# Write inline event handlers
+C# supports lambda expressions. 
+A lambda expression enables you to create an anonymous function. 
+A lambda expression is useful if you have a simple event handler that you don't need to reuse elsewhere in a page or component.
+```csharp
+@page "/counter"
+<h1>Counter</h1>
+<p>Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="() => currentCount++">Click me</button>
+
+@code {
+    private int currentCount = 0;
+}
+```
+# Use an event to set the focus to a DOM element
+The simplest way to perform this task is to use the FocusAsync method. This method is an instance method of an ElementReference object. 
+The ElementReference should reference the item to which you want to set the focus. 
+You designate an element reference with the @ref attribute and create a C# object with the same name in your code.
+- In the following example, the @onclick event handler for the <button> element sets the focus on the <input> element.
+```html
+<button class="btn btn-primary" @onclick="ChangeFocus">Click me to change focus</button>
+<input @ref=InputField @onfocus="HandleFocus" value="@data"/>
+```
+```csharp
+@code {
+    private ElementReference InputField;
+    private string data;
+
+    private async Task ChangeFocus()
+    {
+        await InputField.FocusAsync();
+    }
+
+    private async Task HandleFocus()
+    {
+        data = "Received focus";
+    }
+```
+# Handle events asynchronously
+By default, Blazor event handlers are synchronous. If an event handler performs a potentially long-running operation, such as calling a web service, the thread on which the event handler runs is blocked until the operation completes. This situation can lead to poor response in the user interface
+# use async in methods
+- To combat this problem, you can designate an event handler method as asynchronous. Use the C# async keyword. The method must return a Task object. You can then use the await operator inside the event handler method to initiate any long-running tasks on a separate thread and free the current thread for other work.
+```csharp
+<button @onclick="DoWork">Run time-consuming operation</button>
+
+@code {
+    private async Task DoWork()
+    {
+        // Call a method that takes a long time to run and free the current thread
+        var data = await timeConsumingOperation();
+
+        // Omitted for brevity
+    }
+}
+```
+# MouseEventArgs
+You don't need to provide this parameter when you call the method; the Blazor runtime adds it automatically. You can query this parameter in the event handler. The following code increments the counter shown in the previous example by five if the user presses the Ctrl key at the same time as clicking the button:
+```csharp
+@page "/counter"
+<h1>Counter</h1>
+<p>Current count: @currentCount</p>
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+    private void IncrementCount(MouseEventArgs e)
+    {
+        if (e.CtrlKey) // Ctrl key pressed as well
+        {
+            currentCount += 5;
+        }
+        else
+        {
+            currentCount++;
+        }
+    }
+}
+```
+- ther events provide different EventArgs parameters. 
+For instance, the @onkeypress event passes a KeyboardEventArgs parameter that indicates which key the user pressed. 
+For any of the DOM events, if you don't need this information, you can omit the EventArgs parameter from the event handling method.
+
+# Blazor event handlers
+Most HTML elements expose events that are triggered when something significant happens. Such as, when a page finishes loading, the user clicks a button, or the contents of an HTML element are changed. An app can handle an event in several ways:
+
+The app can ignore the event.
+The app can run an event handler written in JavaScript to process the event.
+The app can run a Blazor event handler written in C# to process the event.
+# Handle an event with Blazor and C#
+
 # App.razor component
 If you want to apply a default layout to every component in all folders of your web app, you can do so in the App.razor component, where you configure the Router component, as you learned in unit 2. In the <RouteView> tag, use the DefaultLayout attribute.
 <Router AppAssembly="@typeof(Program).Assembly">
