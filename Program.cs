@@ -7,6 +7,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 // Register the pizzas service
 builder.Services.AddSingleton<PizzaService>();
+builder.Services.AddScoped<OrderState>();
 // Register the HTTP client and database context
 builder.Services.AddHttpClient();
 builder.Services.AddSqlite<PizzaStoreContext>("Data Source=pizza.db");

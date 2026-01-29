@@ -6,6 +6,7 @@
 @inject PizzaService PizzaSvc
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
+@inject OrderState OrderState
 
 <div class="main">
   <h1>Blazing Pizzas</h1>
@@ -18,22 +19,39 @@
     {
       @foreach (var special in specials)
       {
-        <li style="background-image: url('@special.ImageUrl')">
+        @* <li style="background-image: url('@special.ImageUrl')">
           <div class="pizza-info">
             <span class="title">@special.Name</span>
             @special.Description
             <span class="price">@special.GetFormattedBasePrice()</span>
           </div>
+        </li> *@
+        <li @onclick="@(() => OrderState.ShowConfigurePizzaDialog(special))" style="background-image: url('@special.ImageUrl')"> 
+           <div class="pizza-info">
+            <span class="title">@special.Name</span>
+            @special.Description
+            <span class="price">@special.GetFormattedBasePrice()</span>
+          </div>
         </li>
+
       }
     }
   </ul>
 </div>
 
+@* display the new ConfigurePizzaDialog component,
+call to the ConfigurePizzaDialog component *@
+@if (OrderState.ShowingConfigureDialog){
+   <ConfigurePizzaDialog
+    Pizza="OrderState.ConfiguringPizza"
+    OnCancel="OrderState.CancelConfigurePizzaDialog"
+    OnConfirm="OrderState.ConfirmConfigurePizzaDialog" />
+}
 
 @code {
   List<PizzaSpecial> specials = new();
 
+  #region Initialize the pizza specials
   /// <summary>
   /// Initialize the list of pizza specials.
   /// </summary>
@@ -64,6 +82,8 @@
         }));
     } *@
 
+    #endregion
+
   // Load the pizza specials from the Web API
   // The JsonReader raised an exception
   // because the JSON property names did not match the C# property names.
@@ -75,4 +95,6 @@
     // @inject NavigationManager NavigationManager
     specials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>(NavigationManager.BaseUri + "specials");
   }
+
+
 }
