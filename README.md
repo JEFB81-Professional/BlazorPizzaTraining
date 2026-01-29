@@ -1,3 +1,73 @@
+# App.razor component
+If you want to apply a default layout to every component in all folders of your web app, you can do so in the App.razor component, where you configure the Router component, as you learned in unit 2. In the <RouteView> tag, use the DefaultLayout attribute.
+<Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(BlazingPizzasMainLayout)" />
+    </Found>
+    <NotFound>
+        <p>Sorry, there's nothing at this address.</p>
+    </NotFound>
+</Router>
+- Components that have a layout specified in their own @layout directive, or in an _Imports.razor file, override this default layout setting.
+
+# template overall with _Imports.razor file
+If you want to apply a template to all the Blazor components in a folder, you can use the _Imports.razor file as a shortcut.
+When the Blazor compiler finds this file, it includes its directives in all the components in the folder automatically. This technique removes the need to add the @layout directive to every component and applies to components in the same folder as the _Imports.razor file and all its subfolders.
+- Don't add a @layout directive to the _Imports.razor file in the root folder of your project because it results in an infinite loop of layouts.
+# Use a layout in a Blazor component
+To use a layout from another component, add the @layout directive with the name of the layout to apply. 
+The component's HTML is rendered in the position of the @Body directive
+```csharp
+@page "/FavoritePizzas/{favorite}"
+@layout BlazingPizzasMainLayout
+
+<h1>Choose a Pizza</h1>
+
+<p>Your favorite pizza is: @Favorite</p>
+
+@code {
+    [Parameter]
+    public string Favorite { get; set; }
+}
+```
+-- in the body will contain the html code of the razor page after it is rendered
+# Code a Blazor layout
+Two requirements are unique to Blazor layout components:
+
+- You must inherit the LayoutComponentBase class. (@inherits LayoutComponentBase)
+- You must include the @Body directive in the location where you want to render the content of the components that you're referencing. (@Body)
+- The app's default layout is the Shared/MainLayout.razor component.
+## example:
+```csharp
+@inherits LayoutComponentBase
+
+<header>
+    <h1>Blazing Pizza</h1>
+</header>
+
+<nav>
+    <a href="Pizzas">Browse Pizzas</a>
+    <a href="Toppings">Browse Extra Toppings</a>
+    <a href="FavoritePizzas">Tell us your favorite</a>
+    <a href="Orders">Track Your Order</a>
+</nav>
+
+@Body
+
+<footer>
+    @new MarkdownString(TrademarkMessage)
+</footer>
+
+@code {
+    public string TrademarkMessage { get; set; } = "All content is &copy; Blazing Pizzas 2021";
+}
+```
+- Layout components don't include a @page directive because they don't handle requests directly and shouldn't have a route created for them. 
+
+# What are Blazor layouts?
+A layout component in Blazor is one that shares its rendered markup with all the components that reference it. You place common UI elements like navigation menus, branding, and footers on the layout. Then you reference that layout from multiple other components. When the page is rendered, unique elements such as the details of the requested pizza, come from the referencing component. But, common elements come from the layout. You only have to code the common UI elements once, in the layout. Then if you need to rebrand the site, or make some other change, you only have to correct the layout. The change automatically applies to all the referencing components.
+# Build reusable Blazor components using layouts
+Suppose you're working in the pizza delivery company's website and you created the content for most of the main pages as a set of Blazor components. You want to ensure that these pages have the same branding, navigation menus, and footer section. However, you don't want to have to copy and paste that code into multiple files.
 # Set a catch-all route parameter
 Now suppose the user tries to specify two favorites by requesting the URI http://www.contoso.com/favoritepizza/margherita/hawaiian.
 The page displays the message Your favorite pizza is: margherita and ignores the subfolder hawaiian. 
