@@ -1,0 +1,93 @@
+@page "/addresseditor"
+@using BlazingPizza.Data
+@using Microsoft.AspNetCore.Components
+
+@* OnSubmit: This event fires whenever the user submits a form, regardless of the results of validation.
+<EditForm Model="@pizza" OnSubmit=@HandleSubmission>
+
+OnValidSubmit: This event fires when the user submits a form and their input passes validation.
+OnInvalidSubmit: This event fires when the user submits a form and their input fails validation. 
+<EditForm Model="@pizza" OnValidSubmit=@ProcessInputData OnInvalidSubmit=@ShowFeedback>
+*@
+
+<EditForm Model="Input" OnValidSubmit="HandleValidSubmit"  OnInvalidSubmit=@ShowFeedback>
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <div class="form-group row">
+        <label for="Name" class="col-sm-3 col-form-label">Name</label>
+        <div class="col-sm-9">
+            <InputText id="Name" @bind-Value="Input.Name" class="form-control" />
+            <ValidationMessage For="@(() => Input.Name)" class="text-danger" />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="Line1" class="col-sm-3 col-form-label">Line 1</label>
+        <div class="col-sm-9">
+            <InputText id="Line1" @bind-Value="Input.Line1" class="form-control" />
+            <ValidationMessage For="@(() => Input.Line1)" class="text-danger" />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="Line2" class="col-sm-3 col-form-label">Line 2</label>
+        <div class="col-sm-9">
+            <InputText id="Line2" @bind-Value="Input.Line2" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="City" class="col-sm-3 col-form-label">City</label>
+        <div class="col-sm-9">
+            <InputText id="City" @bind-Value="Input.City" class="form-control" />
+            <ValidationMessage For="@(() => Input.City)" class="text-danger" />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="Region" class="col-sm-3 col-form-label">Region</label>
+        <div class="col-sm-9">
+            <InputText id="Region" @bind-Value="Input.Region" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="PostalCode" class="col-sm-3 col-form-label">Postal Code</label>
+        <div class="col-sm-9">
+            <InputText id="PostalCode" @bind-Value="Input.PostalCode" class="form-control" />
+            <ValidationMessage For="@(() => Input.PostalCode)" class="text-danger" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@code {
+    [Parameter] public Address Address { get; set; }
+    public Address Input { get; set; } = new Address();
+    void HandleValidSubmit()
+    {
+        Address.Name = Input.Name;
+        Address.Line1 = Input.Line1;
+        Address.Line2 = Input.Line2;
+        Address.City = Input.City;
+        Address.Region = Input.Region;
+        Address.PostalCode = Input.PostalCode;
+    }
+    // If you use OnSubmit, the other two events aren't fired. Instead, you can use the EditContext parameter to check whether to process the input data or not. 
+     void HandleSubmission(EditContext context)
+    {
+        bool dataIsValid = context.Validate();
+        if (dataIsValid)
+        {
+            // Store valid data here
+        }
+    }
+
+    // when using OnValidSubmit and OnInvalidSubmit, you can use this method to help the user correct issues with their input.
+    void ShowFeedback(EditContext context)
+    {
+        // Take action here to help the user correct the issues
+    }
+}

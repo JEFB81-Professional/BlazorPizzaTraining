@@ -1,3 +1,106 @@
+# Handle form validations server-side on form submission
+When you use an EditForm component, three events are available for responding to form submission:
+
+OnSubmit: This event fires whenever the user submits a form, regardless of the results of validation.
+OnValidSubmit: This event fires when the user submits a form and their input passes validation.
+OnInvalidSubmit: This event fires when the user submits a form and their input fails validation.
+
+- If you use OnSubmit, the other two events aren't fired. Instead, you can use the EditContext parameter to check whether to process the input data or not.
+
+# Control your app's form validation
+Blazor performs validation at two different times:
+
+- Field validation is executed when a user tabs out of a field. Field validation ensures that a user is aware of the validation problem at the earliest possible time.
+- Model validation is executed when the user submits the form. Model validation ensures that invalid data isn't stored.
+If a form fails validation, messages are displayed in the ValidationSummary and ValidationMessage components. To customize these messages, you can add an ErrorMessage attribute to the data annotation for each field in the model:
+```csharp
+public class Pizza
+{
+    public int Id { get; set; }
+    
+    [Required(ErrorMessage = "You must set a name for your pizza.")]
+    public string Name { get; set; }
+    ...
+```
+- you can create a custom validation attribute. Start by creating a class that inherits from the ValidationAttribute class and overrides the IsValid method:
+```csharp
+public class PizzaBase : ValidationAttribute
+{
+    public string GetErrorMessage() => $"Sorry, that's not a valid pizza base.";
+
+    protected override ValidationResult IsValid(
+        object value, ValidationContext validationContext)
+    {
+        if (value != "Tomato" || value != "Pesto")
+        {
+            return new ValidationResult(GetErrorMessage());
+        }
+
+        return ValidationResult.Success;
+    }
+}
+```
+- Now, you can use your custom validation attribute as you use the built-in attributes in the model class
+
+
+# Add validation components to the form
+- To configure your form to use data-annotation validation, first make sure the input control is bound to the model properties. Then, add the DataAnnotationsValidator component somewhere within the EditForm component. 
+- To display the messages that validation generates, use the ValidationSummary component, which shows all the validation messages for all controls in the form.
+example:
+```csharp
+@page "/admin/createpizza"
+
+<h1>Add a new pizza</h1>
+
+<EditForm Model="@pizza">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    
+    <InputText id="name" @bind-Value="pizza.Name" />
+    <ValidationMessage For="@(() => pizza.Name)" />
+    
+    <InputText id="description" @bind-Value="pizza.Description" />
+    
+    <InputText id="chefemail" @bind-Value="pizza.ChefEmail" />
+    <ValidationMessage For="@(() => pizza.ChefEmail)" />
+    
+    <InputNumber id="price" @bind-Value="pizza.Price" />
+    <ValidationMessage For="@(() => pizza.Price)" />
+</EditForm>
+
+@code {
+    private Pizza pizza = new();
+}
+```
+
+# Annotations:
+includes the [Required] attribute to ensure that the Name and Price values are always completed. It also uses the [Range] attribute to check that the price entered is within a sensible range for a pizza. Finally, it uses the [EmailAddress] attribute to check the ChefEmail value entered is a valid email address.
+Other annotations that you can use in a model include:
+
+[ValidationNever]: Use this annotation when you want to ensure that the field is never included in validation.
+[CreditCard]: Use this annotation when you want to record a valid credit card number from the user.
+[Compare]: Use this annotation when you want to ensure that two properties in the model match.
+[Phone]: Use this annotation when you want to record a valid telephone number from the user.
+[RegularExpression]: Use this annotation to check the format of a value by comparing it to a regular expression.
+[StringLength]: Use this annotation to check that the length of a string value doesn't exceed a maximum length.
+[Url]: Use this annotation when you want to record a valid URL from the user.
+
+# validations forms:
+When you use the EditForm component in Blazor, you have versatile validation options available without writing complex code:
+
+- In your model, you can use data annotations against each property to tell Blazor when values are required and what format they should be in.
+Within your EditForm component, add the DataAnnotationsValidator component, which checks the model annotations against the user's entered values.
+- Use the ValidationSummary component when you want to display a summary of all the validation messages in a submitted form.
+- Use the ValidationMessage component when you want to display the validation message for a specific model property.
+
+The ValidationSummary component is placed at the top of the form (after DataAnnotationsValidator) and will display all validation errors in a summary list when the form is submitted with invalid data.
+
+# Validate user input in Blazor forms
+When you collect information from a website user, it's important to check that it makes sense and is in the right form:
+
+For business reasons: Customer information such as a telephone number or order details must be correct to give good service to users. For example, if your webpage can spot a malformed telephone number as soon as the user enters it, you can prevent costly delays later.
+For technical reasons: If your code uses form input for calculations or other processing, incorrect input can cause errors and exceptions.
+For security reasons: Malicious users might try to inject code by exploiting input fields that aren't checked.
 # Use an EventCallback to handle events across components
 -  to pass events between Blazor components.
 A Blazor page can contain one or more Blazor components, and components can be nested in a parent-child relationship. An event in a child component can trigger an event-handler method in a parent component by using an EventCallback. A callback references a method in the parent component. The child component can run the method by invoking the callback. This mechanism is similar to using a delegate to reference a method in a C# application.
