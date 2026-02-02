@@ -1,3 +1,18 @@
+# add nuget
+ dotnet add package Learn.ExampleLibrary001 -s ../ExampleLibrary001/bin/Release --prerelease 
+ when using version   <Version>0.1.0-beta</Version>
+ -- use command ```-- prerelease``` when the build is not final:
+ - dotnet add package Learn.ExampleLibrary001 -s ../ExampleLibrary001/bin/Release --prerelease 
+ When final then: 
+ - dotnet add package Learn.ExampleLibrary001 -s ../ExampleLibrary001/bin/Release
+
+# Differences between a class library and a Razor class library
+A class library is a common package delivery structure in .NET applications, and a Razor class library is similar in structure with a few other features configured in the project file.
+- <ProjectReference Include="..\ExampleLibrary001\ExampleLibrary001.csproj" />
+
+# Razor class libraries
+A Razor class library is a .NET project type. It contains Razor components, pages, HTML, Cascading Style Sheet (CSS) files, JavaScript, images, and other static web content that a Blazor application can reference. Like other .NET class library projects, Razor class libraries can be bundled as a NuGet package and shared on NuGet package repositories such as NuGet.org.
+
 # Handle form validations server-side on form submission
 When you use an EditForm component, three events are available for responding to form submission:
 
