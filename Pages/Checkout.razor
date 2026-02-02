@@ -1,27 +1,16 @@
 @page "/checkout"
 @using BlazingPizza.Services
+@using Microsoft.AspNetCore.Components.Forms
+@implements IDisposable
+@inject IJSRuntime JSRuntime
 @inject OrderState OrderState
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
-@* <div class="top-bar">
-    <a class="logo" href="">
-        <img src="img/logo.svg" />
-    </a>
-
-    <a href="" class="nav-tab active" >
-        <img src="img/pizza-slice.svg" />
-        <div>Get Pizza</div>
-    </a>
-
-    <a href="myorders" class="nav-tab" >
-        <img src="img/bike.svg" />
-        <div>My orders</div>
-    </a>    
-</div> *@
-
 <div class="main">
-    <EditForm Model=Order.DeliveryAddress OnSubmit=CheckSubmission>
+    @* <EditForm Model=Order.DeliveryAddress OnSubmit=CheckSubmission>  *@
+    <EditForm EditContext=editContext OnValidSubmit=PlaceOrder>
+        @* <EditForm Model=Order.DeliveryAddress OnValidSubmit=PlaceOrder OnInvalidSubmit=ShowError>  *@
         <div class="checkout-cols">
             <div class="checkout-order-details">
                 <h4>Review order</h4>
@@ -49,17 +38,15 @@
                 <h4>Deliver to...</h4>
                 @if (isError)
                 {
-                    <div class="alert alert-danger">Please enter a name and address.</div>
+                    <div class="alert alert-danger">Please enter a name, address, city and postal code.</div>
                 }
                 <AddressEditor Address="Order.DeliveryAddress" />
+             
             </div>
-            @* <button class="checkout-button btn btn-warning" @onclick="PlaceOrder" disabled=@isSubmitting>
-        Place order
-    </button> *@
-    </div>
+        </div>
 
     </EditForm>
-    <button class="checkout-button btn btn-warning" disabled=@isSubmitting>Place order</button>
+   <button class="checkout-button btn btn-warning" type="Submit" disabled=@isError>Place order</button>
 </div>
 
 
@@ -67,11 +54,15 @@
 @code {
     Order Order => OrderState.Order;
     bool isError = false;
-    bool isSubmitting;
+    bool isSubmitting = false;
+
+    private EditContext editContext;
 
     public async Task PlaceOrder()
     {
-        //isSubmitting = true;
+
+        @* isSubmitting = true;
+        isError = false; *@
         var response = await HttpClient.PostAsJsonAsync($"{NavigationManager.BaseUri}orders", OrderState.Order);
         // capture the new order ID from the response
         var newOrderId = await response.Content.ReadFromJsonAsync<int>();
@@ -82,15 +73,40 @@
 
     private async Task CheckSubmission(EditContext editContext)
     {
+        // add console output for debugging
+        // await JSRuntime.InvokeVoidAsync("console.log", "CheckSubmission model:", editContext.Model);
+
         isSubmitting = true;
         var model = editContext.Model as Address;
         isError = string.IsNullOrWhiteSpace(model?.Name)
         || string.IsNullOrWhiteSpace(model?.Line1)
+        || string.IsNullOrWhiteSpace(model?.City)
         || string.IsNullOrWhiteSpace(model?.PostalCode);
         if (!isError)
         {
             await PlaceOrder();
         }
         isSubmitting = false;
+    }
+
+    protected void ShowError()
+    {
+        isError = true;
+    }
+
+    protected override void OnInitialized()
+    {
+        editContext = new(Order.DeliveryAddress);
+        editContext.OnFieldChanged += HandleFieldChanged;
+    }
+    private void HandleFieldChanged(object sender, FieldChangedEventArgs e)
+    {
+        isError = !editContext.Validate();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        editContext.OnFieldChanged -= HandleFieldChanged;
     }
 }
